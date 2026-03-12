@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Plano de Saúde — Corretora Amor à Vida</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-dark:   #0F2C5E;
+    --blue-mid:    #1A4A8A;
+    --blue:        #2563C0;
+    --blue-light:  #3B82D4;
+    --blue-pale:   #EEF4FF;
+    --blue-border: rgba(37,99,192,0.18);
+    --gold:        #C9A227;
+    --silver:      #7A8FA0;
+    --bronze:      #B06A35;
+    --white:       #FFFFFF;
+    --bg:          #F4F7FC;
+    --text-dark:   #0F1E3C;
+    --text-mid:    #3A4A6A;
+    --text-light:  #7A8AAA;
+    --card-bg:     #ffffff;
+    --shadow:      0 4px 28px rgba(15,44,94,0.10);
+    --shadow-lg:   0 12px 48px rgba(15,44,94,0.14);
+    --border:      #DDE5F4;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    color: var(--text-dark);
+    overflow-x: hidden;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--blue-dark);
+    padding: 0 32px;
+    height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 16px rgba(15,44,94,0.25);
+  }
+
+  .topbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .topbar img {
+    height: 38px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+  }
+
+  .topbar-fallback {
+    display: none;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    color: white;
+    letter-spacing: -0.02em;
+  }
+
+  /* ── PAGE ── */
+  .page-wrap {
+    max-width: 840px;
+    margin: 0 auto;
+    padding: 44px 20px 90px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    background: var(--blue-pale);
+    border: 1px solid var(--blue-border);
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+  }
+
+  .header h1 {
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(26px, 5vw, 42px);
+    font-weight: 900;
+    color: var(--text-dark);
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
+  .header h1 span { color: var(--blue); }
+
+  .header p {
+    color: var(--text-light);
+    font-size: 15px;
+  }
+
+  /* ── STEPS NAV ── */
+  .steps-nav {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    margin-bottom: 32px;
+    animation: fadeDown 0.6s 0.1s ease both;
+  }
+
+  .step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    min-width: 80px;
+  }
+
+  .step-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 18px;
+    left: calc(50% + 20px);
+    width: calc(100% - 8px);
+    height: 2px;
+    background: var(--border);
+    transition: background 0.4s;
+  }
+
+  .step-item.done:not(:last-child)::after { background: var(--blue); }
+
+  .step-dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 800;
+    color: var(--text-light);
+    background: white;
+    transition: all 0.3s;
+    position: relative; z-index: 1;
+  }
+
+  .step-item.active .step-dot {
+    border-color: var(--blue);
+    color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(37,99,192,0.12);
+  }
+
+  .step-item.done .step-dot {
+    border-color: var(--blue);
+    background: var(--blue);
+    color: white;
+  }
+
+  .step-label {
+    font-size: 11px; font-weight: 600;
+    color: var(--text-light);
+    text-align: center; white-space: nowrap;
+    transition: color 0.3s;
+  }
+
+  .step-item.active .step-label,
+  .step-item.done .step-label { color: var(--blue); }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    animation: fadeUp 0.45s ease both;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .card-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+
+  .card-header-text h2 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 18px; font-weight: 800;
+    color: white;
+  }
+
+  .card-header-text p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    margin-top: 2px;
+  }
+
+  .card-body { padding: 32px; }
+
+  /* ── FORM ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  .form-grid .full { grid-column: 1 / -1; }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-mid);
+  }
+
+  input[type="text"], input[type="date"], select {
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-dark);
+    background: #FAFBFE;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none; -webkit-appearance: none;
+    width: 100%;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%233A4A6A' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,192,0.12);
+    background: white;
+  }
+
+  .field-error { font-size: 12px; color: #D93025; margin-top: 2px; display: none; }
+  .field-group.has-error input,
+  .field-group.has-error select { border-color: #D93025; }
+  .field-group.has-error .field-error { display: block; }
+
+  /* ── PLAN CARDS ── */
+  .plans-intro { margin-bottom: 22px; }
+  .plans-intro h3 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 16px; font-weight: 800;
+    color: var(--text-dark); margin-bottom: 4px;
+  }
+  .plans-intro p { font-size: 13px; color: var(--text-light); }
+
+  .subsidy-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--blue-pale);
+    border: 1px solid var(--blue-border);
+    border-radius: 8px; padding: 6px 14px;
+    font-size: 13px; font-weight: 500;
+    color: var(--blue-mid); margin-top: 10px;
+  }
+  .subsidy-badge strong { color: var(--blue); }
+
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+    gap: 12px; margin-bottom: 12px;
+  }
+
+  .plan-card {
+    border: 2px solid var(--border);
+    border-radius: 16px; padding: 20px 16px;
+    cursor: pointer; transition: all 0.22s;
+    background: #FAFBFE; position: relative; overflow: hidden;
+  }
+
+  .plan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+
+  .plan-card.selected.bronze-card { border-color: var(--bronze); background: #FFF8F3; }
+  .plan-card.selected.silver-card { border-color: var(--silver); background: #F5F7FA; }
+  .plan-card.selected.gold-card   { border-color: var(--gold);   background: #FFFBEF; }
+  .plan-card.selected.no-plan-card { border-color: #B0BAC8; background: #F7F8FA; }
+
+  .plan-tier-badge {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 100px;
+    display: inline-block; margin-bottom: 12px;
+  }
+
+  .bronze-badge { background: rgba(176,106,53,0.1); color: var(--bronze); }
+  .silver-badge { background: rgba(122,143,160,0.13); color: #4A6070; }
+  .gold-badge   { background: rgba(201,162,39,0.12);  color: #8A6A10; }
+
+  .plan-card h4 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800;
+    color: var(--text-dark); margin-bottom: 4px;
+  }
+
+  .plan-price {
+    font-family: 'Nunito', sans-serif;
+    font-size: 22px; font-weight: 900;
+    color: var(--text-dark); margin-bottom: 2px;
+  }
+
+  .plan-price-label { font-size: 11px; color: var(--text-light); }
+  .plan-original { font-size: 11px; color: var(--text-light); text-decoration: line-through; margin-top: 6px; }
+
+  .plan-check {
+    position: absolute; top: 13px; right: 13px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .plan-card.selected .plan-check { background: var(--blue); border-color: var(--blue); }
+  .plan-check svg { opacity: 0; transition: opacity 0.2s; }
+  .plan-card.selected .plan-check svg { opacity: 1; }
+
+  .no-plan-card { border: 2px dashed #C8D4E8; }
+  .no-plan-card h4 { color: var(--text-light); }
+
+  /* ── DEPENDENTES ── */
+  .dep-choice {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 24px;
+  }
+
+  .choice-btn {
+    padding: 18px; border: 2px solid var(--border);
+    border-radius: 14px; cursor: pointer;
+    text-align: center;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--text-mid); background: #FAFBFE;
+    transition: all 0.2s;
+  }
+
+  .choice-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .choice-btn.active { border-color: var(--blue); background: var(--blue-pale); color: var(--blue); }
+  .choice-btn .choice-icon { font-size: 24px; margin-bottom: 8px; }
+
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
+  .dependents-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .dependent-item {
+    background: #F7F9FD;
+    border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 18px;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .dependent-item h5 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px; font-weight: 800;
+    color: var(--text-mid); margin-bottom: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  .btn-remove {
+    background: rgba(217,48,37,0.07);
+    border: 1px solid rgba(217,48,37,0.15);
+    color: #C04040; border-radius: 8px;
+    padding: 4px 10px; font-size: 12px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+  .btn-remove:hover { background: rgba(217,48,37,0.13); }
+
+  .dep-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .dep-price-display {
+    margin-top: 12px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 10px; padding: 13px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+  }
+
+  .btn-add-dep {
+    display: flex; align-items: center; gap: 8px;
+    padding: 13px 20px;
+    border: 2px dashed rgba(37,99,192,0.28);
+    border-radius: 12px; background: transparent;
+    color: var(--blue);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; width: 100%; justify-content: center;
+    transition: all 0.2s; margin-top: 8px;
+  }
+  .btn-add-dep:hover { background: var(--blue-pale); border-color: var(--blue); }
+
+  /* ── BUTTONS ── */
+  .btn-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-top: 28px; gap: 10px;
+  }
+
+  .btn-back {
+    padding: 11px 22px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px; background: white;
+    color: var(--text-mid);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-back:hover { border-color: var(--blue); color: var(--blue); }
+
+  .btn-next {
+    padding: 13px 30px; border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--blue-light));
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 800;
+    cursor: pointer; transition: all 0.22s;
+    box-shadow: 0 4px 14px rgba(37,99,192,0.3);
+    letter-spacing: 0.02em;
+  }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(37,99,192,0.38); }
+  .btn-next:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ── SUCCESS / SUMMARY ── */
+  .success-wrap { text-align: center; padding: 10px 0 6px; }
+
+  .success-icon {
+    width: 76px; height: 76px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), var(--blue-light));
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px; font-size: 34px;
+    box-shadow: 0 8px 28px rgba(37,99,192,0.32);
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  .success-wrap h2 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 24px; font-weight: 900;
+    color: var(--text-dark); margin-bottom: 8px;
+  }
+
+  .success-wrap > p {
+    color: var(--text-light); font-size: 14px; margin-bottom: 24px;
+  }
+
+  .summary-box {
+    background: #F4F7FC;
+    border: 1.5px solid #D4DFF0;
+    border-radius: 14px; padding: 22px;
+    text-align: left; margin-bottom: 20px;
+  }
+
+  .summary-box h4 {
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--blue-mid); margin-bottom: 14px;
+  }
+
+  .summary-row {
+    display: flex; justify-content: space-between;
+    padding: 9px 0; border-bottom: 1px solid #DDE5F4;
+    font-size: 14px; gap: 12px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .s-label { color: var(--text-light); }
+  .s-value { font-weight: 600; color: var(--text-dark); text-align: right; }
+  .s-value.highlight { color: var(--blue); }
+
+  .btn-restart {
+    padding: 12px 26px;
+    border: 1.5px solid var(--blue);
+    border-radius: 10px; background: transparent;
+    color: var(--blue);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-restart:hover { background: var(--blue-pale); }
+
+  /* ── SEND STATES ── */
+  .saved-badge {
+    display: none;
+    align-items: center; gap: 8px;
+    background: #EEF4FF;
+    border: 1px solid rgba(37,99,192,0.22);
+    border-radius: 100px; padding: 7px 18px;
+    font-size: 13px; font-weight: 600;
+    color: var(--blue); margin-bottom: 18px;
+    justify-content: center;
+  }
+  .saved-badge.show { display: inline-flex; }
+
+  .error-state {
+    display: none;
+    background: #FFF3F3; border: 1.5px solid #F5B8B8;
+    border-radius: 10px; padding: 12px 16px;
+    margin-bottom: 16px; font-size: 13px; color: #C04040; text-align: left;
+  }
+  .error-state.show { display: block; }
+
+  .sending-state {
+    display: none; align-items: center; justify-content: center;
+    gap: 10px; color: var(--text-light);
+    font-size: 14px; margin-bottom: 16px;
+  }
+  .sending-state.show { display: flex; }
+
+  /* ── MISC ── */
+  .hidden { display: none !important; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(37,99,192,0.18);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .card-body { padding: 22px 18px; }
+    .card-header { padding: 20px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid .full { grid-column: 1; }
+    .plans-grid { grid-template-columns: 1fr 1fr; }
+    .dep-grid-2 { grid-template-columns: 1fr; }
+    .dep-choice { grid-template-columns: 1fr 1fr; }
+    .step-label { font-size: 10px; }
+    .step-item { min-width: 64px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-inner">
+    <img
+      src="https://corretoraamoravida.com.br/wp-content/uploads/2023/04/logo-amor-a-vida.svg"
+      alt="Amor à Vida Corretora"
+      onerror="this.style.display='none';document.getElementById('topbar-fb').style.display='block';"
+    />
+    <span id="topbar-fb" class="topbar-fallback">💙 Amor à Vida</span>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">💙 Corretora Amor à Vida</div>
+    <h1>Simulador de <span>Plano de Saúde</span></h1>
+    <p>Descubra o plano ideal e veja exatamente quanto você pagará</p>
+  </div>
+
+  <!-- STEPS -->
+  <div class="steps-nav" id="stepsNav">
+    <div class="step-item active" id="step-nav-1">
+      <div class="step-dot">1</div>
+      <div class="step-label">Seus dados</div>
+    </div>
+    <div class="step-item" id="step-nav-2">
+      <div class="step-dot">2</div>
+      <div class="step-label">Plano</div>
+    </div>
+    <div class="step-item" id="step-nav-3">
+      <div class="step-dot">3</div>
+      <div class="step-label">Dependentes</div>
+    </div>
+    <div class="step-item" id="step-nav-4">
+      <div class="step-dot">✓</div>
+      <div class="step-label">Resumo</div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 1 ═══ -->
+  <div class="card" id="step1">
+    <div class="card-header">
+      <div class="card-icon">👤</div>
+      <div class="card-header-text">
+        <h2>Informações Básicas <span style="color:rgba(255,255,255,0.5);font-weight:600;">(DAISO)</span></h2>
+        <p>Preencha seus dados para personalizar sua simulação</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="field-group full" id="fg-nome">
+          <label>Nome completo</label>
+          <input type="text" id="nome" placeholder="Seu nome completo" />
+          <span class="field-error">Por favor, informe seu nome.</span>
+        </div>
+        <div class="field-group" id="fg-admissao">
+          <label>Data de admissão</label>
+          <input type="date" id="admissao" />
+          <span class="field-error">Informe a data de admissão.</span>
+        </div>
+        <div class="field-group" id="fg-cargo">
+          <label>Cargo</label>
+          <select id="cargo">
+            <option value="">Selecione seu cargo</option>
+          </select>
+          <span class="field-error">Selecione seu cargo.</span>
+        </div>
+        <div class="field-group" id="fg-faixa">
+          <label>Faixa etária</label>
+          <select id="faixa">
+            <option value="">Selecione sua faixa etária</option>
+            <option value="0 a 18">0 a 18 anos</option>
+            <option value="19 a 23">19 a 23 anos</option>
+            <option value="24 a 28">24 a 28 anos</option>
+            <option value="29 a 33">29 a 33 anos</option>
+            <option value="34 a 38">34 a 38 anos</option>
+            <option value="39 a 43">39 a 43 anos</option>
+            <option value="44 a 48">44 a 48 anos</option>
+            <option value="49 a 53">49 a 53 anos</option>
+            <option value="54 a 58">54 a 58 anos</option>
+            <option value="59+">59 anos ou mais</option>
+          </select>
+          <span class="field-error">Selecione sua faixa etária.</span>
+        </div>
+      </div>
+      <div class="btn-row">
+        <div></div>
+        <button class="btn-next" onclick="goToStep2()">Continuar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 2 ═══ -->
+  <div class="card hidden" id="step2">
+    <div class="card-header">
+      <div class="card-icon">🛡️</div>
+      <div class="card-header-text">
+        <h2>Escolha seu Plano</h2>
+        <p>Valores já com o subsídio da empresa aplicado</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="plans-intro">
+        <h3 id="plansTitle">Planos disponíveis para você</h3>
+        <p>Os valores abaixo consideram o desconto da empresa — você vê apenas o que realmente pagará.</p>
+        <div class="subsidy-badge">
+          🏢 A empresa cobre <strong id="subsidyPct">—</strong> do valor total
+        </div>
+      </div>
+      <div class="plans-grid" id="plansGrid"></div>
+
+      <!-- REDE CREDENCIADA -->
+      <div id="redeSection" style="display:none;margin-top:24px;">
+        <div id="redeToggle" onclick="toggleRede()" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:13px 18px;border:1.5px solid var(--border);border-radius:12px;background:var(--blue-pale);font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;color:var(--blue);user-select:none;">
+          🏥 <span>Ver rede credenciada do plano selecionado</span>
+          <span id="redeArrow" style="margin-left:auto;transition:transform 0.3s;">▼</span>
+        </div>
+        <div id="redeContent" style="display:none;margin-top:12px;border:1.5px solid var(--border);border-radius:14px;overflow:hidden;">
+          <div style="padding:14px 16px;background:#F7F9FD;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            <span style="font-size:13px;font-weight:600;color:var(--text-mid);">Filtrar por região:</span>
+            <select id="filtroRegiao" onchange="renderRede()" style="padding:7px 32px 7px 10px;font-size:13px;border-radius:8px;border:1.5px solid var(--border);background:#FAFBFE;flex:1;min-width:140px;max-width:220px;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%233A4A6A' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 10px center;">
+              <option value="">Todas as regiões</option>
+            </select>
+          </div>
+          <div style="overflow-x:auto;max-height:340px;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+              <thead>
+                <tr>
+                  <th style="position:sticky;top:0;background:var(--blue-dark);color:white;padding:10px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.05em;text-align:left;white-space:nowrap;">Região</th>
+                  <th style="position:sticky;top:0;background:var(--blue-dark);color:white;padding:10px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;letter-spacing:0.05em;text-align:left;">Hospital / Laboratório</th>
+                  <th style="position:sticky;top:0;background:var(--blue-dark);color:white;padding:10px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;text-align:center;">Bronze</th>
+                  <th style="position:sticky;top:0;background:var(--blue-dark);color:white;padding:10px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;text-align:center;">Prata</th>
+                  <th style="position:sticky;top:0;background:var(--blue-dark);color:white;padding:10px 14px;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;text-align:center;">Ouro</th>
+                </tr>
+              </thead>
+              <tbody id="redeTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goBack(1)">← Voltar</button>
+        <button class="btn-next" id="btnStep2Next" onclick="goToStep3()" disabled>Continuar →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 3 ═══ -->
+  <div class="card hidden" id="step3">
+    <div class="card-header">
+      <div class="card-icon">👨‍👩‍👧</div>
+      <div class="card-header-text">
+        <h2>Dependentes</h2>
+        <p>Deseja incluir dependentes no plano?</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="dep-choice">
+        <div class="choice-btn" id="depYes" onclick="setDepChoice(true)">
+          <div class="choice-icon">✅</div>
+          Sim, quero adicionar dependentes
+        </div>
+        <div class="choice-btn" id="depNo" onclick="setDepChoice(false)">
+          <div class="choice-icon">❌</div>
+          Não, continuar sem dependentes
+        </div>
+      </div>
+      <div id="depSection" class="hidden">
+        <hr class="section-divider">
+        <div class="dependents-list" id="dependentsList"></div>
+        <button class="btn-add-dep" onclick="addDependent()">+ Adicionar dependente</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn-back" onclick="goBack(2)">← Voltar</button>
+        <button class="btn-next" id="btnStep3Next" onclick="goToStep4()" disabled>Ver Resumo →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 4 ═══ -->
+  <div class="card hidden" id="step4">
+    <div class="card-header">
+      <div class="card-icon">📋</div>
+      <div class="card-header-text">
+        <h2>Resumo da Simulação</h2>
+        <p>Confira as informações selecionadas</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="success-wrap">
+        <div class="success-icon">🎉</div>
+        <h2>Simulação concluída!</h2>
+        <p>Veja abaixo o resumo das suas escolhas.</p>
+
+        <div class="sending-state" id="sendingState">
+          <div class="spinner"></div>
+          Enviando suas respostas...
+        </div>
+        <div class="error-state" id="errorState">
+          ⚠️ <strong>Não foi possível salvar as respostas.</strong><br>
+          <span style="color:#888;font-size:12px;">Verifique a URL do script no código.</span>
+        </div>
+        <div class="saved-badge" id="savedBadge">
+          ✅ Respostas salvas no Google Sheets
+        </div>
+
+        <div class="summary-box" id="summaryBox"></div>
+        <button class="btn-restart" onclick="restart()">↺ Nova Simulação</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-wrap -->
+
+<script>
+// ══════════════════════════════════════════
+// CONFIGURAÇÃO — cole a URL do Apps Script
+// ══════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxxuHLCY-rG9ikaHjKjolrbrLsjG17usNLsoJX_J5ZICBfSNwnCsSn1d1tGH3IUBKOWmw/exec';
+
+// ══════════════════════════════════════════
+// DADOS
+// ══════════════════════════════════════════
+const CARGOS = [
+  { nome: "Atendente",         pct: 20 },
+  { nome: "Gerente",           pct: 35 },
+  { nome: "Líder - Atendente", pct: 35 },
+  { nome: "Operador de caixa", pct: 20 },
+  { nome: "Sub gerente",       pct: 35 },
+];
+
+const PLANOS = {
+  prata: {
+    nome: "Amil Prata",
+    valores: { "0 a 18":290.40,"19 a 23":339.76,"24 a 28":414.51,"29 a 33":497.40,
+               "34 a 38":522.28,"39 a 43":574.51,"44 a 48":718.13,"49 a 53":789.95,
+               "54 a 58":987.44,"59+":1728.02 }
+  },
+  ouro: {
+    nome: "Amil Ouro",
+    valores: { "0 a 18":323.99,"19 a 23":379.07,"24 a 28":462.47,"29 a 33":554.96,
+               "34 a 38":582.71,"39 a 43":640.98,"44 a 48":801.23,"49 a 53":881.35,
+               "54 a 58":1101.69,"59+":1927.96 }
+  }
+};
+
+const PARENTESCOS = [
+  "Cônjuge / Companheiro(a)","Filho(a)","Enteado(a)",
+  "Pai / Mãe","Sogro(a)","Irmão / Irmã","Outros"
+];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let state = { nome:'', admissao:'', cargo:null, faixa:'', planoSelecionado:null, addDeps:null, dependentes:[] };
+let depCount = 0;
+
+// ── Init cargos select
+(function(){
+  const sel = document.getElementById('cargo');
+  CARGOS.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.nome; o.textContent = c.nome;
+    sel.appendChild(o);
+  });
+})();
+
+// ── Helpers
+function fmt(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function getCargoData(nome) { return CARGOS.find(c => c.nome === nome); }
+function calcColabPrice(total, pct) { return total * (1 - pct / 100); }
+
+function setStepNav(active) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('step-nav-' + i);
+    el.classList.remove('active','done');
+    if (i < active) el.classList.add('done');
+    else if (i === active) el.classList.add('active');
+  }
+}
+
+// ══════════════════════════════════════════
+// STEP 1 → 2
+// ══════════════════════════════════════════
+function goToStep2() {
+  let ok = true;
+  ['nome','admissao','cargo','faixa'].forEach(id => {
+    const el = document.getElementById(id);
+    const fg = document.getElementById('fg-' + id);
+    if (!el.value.trim()) { fg.classList.add('has-error'); ok = false; }
+    else fg.classList.remove('has-error');
+  });
+  if (!ok) return;
+
+  state.nome    = document.getElementById('nome').value.trim();
+  state.admissao= document.getElementById('admissao').value;
+  state.faixa   = document.getElementById('faixa').value;
+  state.cargo   = getCargoData(document.getElementById('cargo').value);
+  state.planoSelecionado = null;
+
+  renderPlans();
+  document.getElementById('step1').classList.add('hidden');
+  document.getElementById('step2').classList.remove('hidden');
+  setStepNav(2);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════
+// RENDER PLANS
+// ══════════════════════════════════════════
+function renderPlans() {
+  const pct = state.cargo.pct;
+  document.getElementById('subsidyPct').textContent = pct + '%';
+  document.getElementById('plansTitle').textContent = `Planos para ${state.nome.split(' ')[0]}`;
+
+  const grid = document.getElementById('plansGrid');
+  grid.innerHTML = '';
+
+  const tiers = [
+    { key:'prata',  label:'Prata',  badgeCls:'silver-badge', cardCls:'silver-card', emoji:'🥈' },
+    { key:'ouro',   label:'Ouro',   badgeCls:'gold-badge',   cardCls:'gold-card',   emoji:'🥇' },
+  ];
+
+  tiers.forEach(({ key, label, badgeCls, cardCls, emoji }) => {
+    const plano = PLANOS[key];
+    const total = plano.valores[state.faixa];
+    const colab = calcColabPrice(total, pct);
+    const div = document.createElement('div');
+    div.className = `plan-card ${cardCls}`;
+    div.id = `plan-${key}`;
+    div.onclick = () => selectPlan(key);
+    div.innerHTML = `
+      <div class="plan-check">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="plan-tier-badge ${badgeCls}">${emoji} ${label}</div>
+      <h4>${plano.nome}</h4>
+      <div class="plan-price">${fmt(colab)}</div>
+      <div class="plan-price-label">/ mês (sua parte)</div>
+      <div class="plan-original">Valor total: ${fmt(total)}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  const noDiv = document.createElement('div');
+  noDiv.className = 'plan-card no-plan-card';
+  noDiv.id = 'plan-nenhum';
+  noDiv.onclick = () => selectPlan('nenhum');
+  noDiv.innerHTML = `
+    <div class="plan-check">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+        <path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h4>Não tenho interesse</h4>
+    <div class="plan-price" style="font-size:14px;margin-top:10px;color:var(--text-light);">Pular esta etapa</div>
+  `;
+  grid.appendChild(noDiv);
+}
+
+// ══════════════════════════════════════════
+// REDE CREDENCIADA
+// ══════════════════════════════════════════
+const REDE = [
+  { regiao:"Águas Claras",   hospital:"Águas Claras",                    bronze:true,  prata:true,  ouro:true  },
+  { regiao:"Asa Norte",      hospital:"Santa Helena",                    bronze:false, prata:false, ouro:false },
+  { regiao:"Asa Norte",      hospital:"Santa Lucia Norte",               bronze:false, prata:true,  ouro:true  },
+  { regiao:"Asa Sul",        hospital:"Hospital do Coração",             bronze:false, prata:false, ouro:false },
+  { regiao:"Asa Sul",        hospital:"DF Star",                         bronze:false, prata:false, ouro:false },
+  { regiao:"Asa Sul",        hospital:"Santa Luzia",                     bronze:false, prata:false, ouro:false },
+  { regiao:"Asa Sul",        hospital:"Alvorada",                        bronze:true,  prata:true,  ouro:true  },
+  { regiao:"Asa Sul",        hospital:"Home",                            bronze:false, prata:false, ouro:true  },
+  { regiao:"Asa Sul",        hospital:"Santa Lucia Sul",                 bronze:false, prata:false, ouro:true  },
+  { regiao:"Asa Sul",        hospital:"Pacini",                          bronze:false, prata:true,  ouro:true  },
+  { regiao:"Asa Sul",        hospital:"HOB",                             bronze:false, prata:false, ouro:false },
+  { regiao:"Asa Sul",        hospital:"Hospital PAI",                    bronze:false, prata:false, ouro:false },
+  { regiao:"Asa Sul",        hospital:"Sírio Libanes",                   bronze:false, prata:false, ouro:false },
+  { regiao:"Ceilândia",      hospital:"Achieta Ceilândia",               bronze:false, prata:true,  ouro:true  },
+  { regiao:"Ceilândia",      hospital:"Hospital das Clínicas e Fraturas",bronze:false, prata:false, ouro:false },
+  { regiao:"Cruzeiro",       hospital:"São Mateus",                      bronze:false, prata:false, ouro:true  },
+  { regiao:"Gama",           hospital:"Santa Lucia Gama",                bronze:false, prata:true,  ouro:true  },
+  { regiao:"Lago Sul",       hospital:"Hospital Brasília",               bronze:true,  prata:true,  ouro:true  },
+  { regiao:"Lago Sul",       hospital:"DAHER",                           bronze:false, prata:true,  ouro:true  },
+  { regiao:"Lago Sul",       hospital:"Hospital Urológico",              bronze:false, prata:true,  ouro:true  },
+  { regiao:"Sudoeste",       hospital:"Maternidade Brasília",            bronze:true,  prata:true,  ouro:true  },
+  { regiao:"Tag. Norte",     hospital:"Anchieta",                        bronze:false, prata:false, ouro:false },
+  { regiao:"Tag. Sul",       hospital:"Hospital Mantevida",              bronze:false, prata:true,  ouro:true  },
+  { regiao:"Tag. Sul",       hospital:"Santa Lucia Pistão Sul",          bronze:false, prata:true,  ouro:true  },
+  { regiao:"Tag. Sul",       hospital:"Santa Marta",                     bronze:false, prata:false, ouro:true  },
+  { regiao:"Todas Unidades", hospital:"Laboratório Sabin",               bronze:false, prata:true,  ouro:true  },
+  { regiao:"Todas Unidades", hospital:"Laboratório Exame",               bronze:true,  prata:true,  ouro:true  },
+];
+
+function toggleRede() {
+  const content = document.getElementById('redeContent');
+  const arrow   = document.getElementById('redeArrow');
+  const open    = content.style.display === 'block';
+  content.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+
+function renderRede() {
+  const filtro = document.getElementById('filtroRegiao').value;
+  const tbody  = document.getElementById('redeTbody');
+  let rows = filtro ? REDE.filter(r => r.regiao === filtro) : REDE;
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa;font-style:italic;">Nenhum hospital encontrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr style="border-bottom:1px solid #EEF2FA;">
+      <td style="padding:9px 14px;"><span style="display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px;background:var(--blue-pale);color:var(--blue);">${r.regiao}</span></td>
+      <td style="padding:9px 14px;color:var(--text-dark);">${r.hospital}</td>
+      <td style="padding:9px 14px;text-align:center;">${r.bronze ? '<span style="color:#1A8A4A;font-size:16px;">✔</span>' : '<span style="color:#ccc;">—</span>'}</td>
+      <td style="padding:9px 14px;text-align:center;">${r.prata  ? '<span style="color:#1A8A4A;font-size:16px;">✔</span>' : '<span style="color:#ccc;">—</span>'}</td>
+      <td style="padding:9px 14px;text-align:center;">${r.ouro   ? '<span style="color:#1A8A4A;font-size:16px;">✔</span>' : '<span style="color:#ccc;">—</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+function initRedeFilters() {
+  const regioes = [...new Set(REDE.map(r => r.regiao))].sort();
+  const sel = document.getElementById('filtroRegiao');
+  sel.innerHTML = '<option value="">Todas as regiões</option>';
+  regioes.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; sel.appendChild(o); });
+  renderRede();
+}
+
+function selectPlan(key) {
+  state.planoSelecionado = key;
+  ['prata','ouro','nenhum'].forEach(k => {
+    const el = document.getElementById('plan-' + k);
+    if (el) el.classList.toggle('selected', k === key);
+  });
+  document.getElementById('btnStep2Next').disabled = false;
+  const redeSection = document.getElementById('redeSection');
+  if (key !== 'nenhum') {
+    redeSection.style.display = 'block';
+    initRedeFilters();
+  } else {
+    redeSection.style.display = 'none';
+    document.getElementById('redeContent').style.display = 'none';
+    document.getElementById('redeArrow').style.transform = 'rotate(0deg)';
+  }
+}
+
+// ══════════════════════════════════════════
+// STEP 2 → 3
+// ══════════════════════════════════════════
+function goToStep3() {
+  if (!state.planoSelecionado) return;
+  document.getElementById('step2').classList.add('hidden');
+  document.getElementById('step3').classList.remove('hidden');
+  setStepNav(3);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════
+// DEPENDENTES
+// ══════════════════════════════════════════
+function setDepChoice(val) {
+  state.addDeps = val;
+  document.getElementById('depYes').classList.toggle('active', val);
+  document.getElementById('depNo').classList.toggle('active', !val);
+  document.getElementById('depSection').classList.toggle('hidden', !val);
+  document.getElementById('btnStep3Next').disabled = false;
+
+  if (!val) {
+    state.dependentes = [];
+    document.getElementById('dependentsList').innerHTML = '';
+    depCount = 0;
+  } else if (state.dependentes.length === 0) {
+    addDependent();
+  }
+}
+
+function addDependent() {
+  depCount++;
+  const id = depCount;
+  state.dependentes.push({ id, nome:'', parentesco:'', faixa:'', valor:'' });
+
+  const planoKey = (state.planoSelecionado && state.planoSelecionado !== 'nenhum') ? state.planoSelecionado : null;
+  const planoNomes = { bronze:'🥉 Amil Bronze', prata:'🥈 Amil Prata', ouro:'🥇 Amil Ouro' };
+  const planoBgMap  = { bronze:'#FFF8F3', prata:'#F5F7FA', ouro:'#FFFBEF' };
+  const planoClrMap = { bronze:'#B06A35', prata:'#4A6070', ouro:'#8A6A10' };
+
+  const produtoBadge = planoKey
+    ? `<div style="display:inline-flex;align-items:center;gap:6px;background:${planoBgMap[planoKey]};border:1.5px solid ${planoClrMap[planoKey]}44;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;color:${planoClrMap[planoKey]};font-family:'Nunito',sans-serif;">${planoNomes[planoKey]}</div>`
+    : `<span style="color:#aaa;font-size:13px;font-style:italic;">Titular sem plano selecionado</span>`;
+
+  let parentOpts = PARENTESCOS.map(p => `<option value="${p}">${p}</option>`).join('');
+  let faixaOpts  = Object.keys(PLANOS.bronze.valores).map(f => `<option value="${f}">${f} anos</option>`).join('');
+
+  const item = document.createElement('div');
+  item.className = 'dependent-item';
+  item.id = `dep-item-${id}`;
+  item.innerHTML = `
+    <h5>
+      <span>Dependente ${id}</span>
+      <button class="btn-remove" onclick="removeDependent(${id})">Remover</button>
+    </h5>
+    <div class="dep-grid-2">
+      <div class="field-group">
+        <label>Nome do dependente</label>
+        <input type="text" id="dep-nome-${id}" placeholder="Nome completo" oninput="updateDepNome(${id})"/>
+      </div>
+      <div class="field-group">
+        <label>Grau de Parentesco</label>
+        <select id="dep-par-${id}" onchange="updateDep(${id})">
+          <option value="">Selecione</option>
+          ${parentOpts}
+        </select>
+      </div>
+    </div>
+    <div style="margin-top:14px;">
+      <label style="font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-mid);display:block;margin-bottom:8px;">Produto (mesmo do titular)</label>
+      ${produtoBadge}
+    </div>
+    <div style="margin-top:14px;">
+      <div class="field-group">
+        <label>Faixa Etária do Dependente</label>
+        <select id="dep-faixa-${id}" onchange="updateDepPrices(${id})">
+          <option value="">Selecione para ver o valor</option>
+          ${faixaOpts}
+        </select>
+      </div>
+    </div>
+    <div class="dep-price-display hidden" id="dep-prices-${id}">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-light);margin-bottom:3px;">Valor mensal do dependente</div>
+        <div style="font-size:12px;color:#aaa;" id="dep-plano-label-${id}"></div>
+      </div>
+      <div style="font-family:'Nunito',sans-serif;font-size:24px;font-weight:900;" id="dep-valor-${id}">—</div>
+    </div>
+  `;
+  document.getElementById('dependentsList').appendChild(item);
+}
+
+function updateDepNome(id) {
+  const dep = state.dependentes.find(d => d.id === id);
+  if (dep) dep.nome = document.getElementById(`dep-nome-${id}`).value;
+}
+
+function updateDep(id) {
+  const dep = state.dependentes.find(d => d.id === id);
+  if (dep) dep.parentesco = document.getElementById(`dep-par-${id}`).value;
+}
+
+function updateDepPrices(id) {
+  const faixa  = document.getElementById(`dep-faixa-${id}`).value;
+  const dep    = state.dependentes.find(d => d.id === id);
+  if (dep) dep.faixa = faixa;
+  const box = document.getElementById(`dep-prices-${id}`);
+  if (!faixa) { box.classList.add('hidden'); return; }
+
+  const planoKey = (state.planoSelecionado && state.planoSelecionado !== 'nenhum') ? state.planoSelecionado : null;
+  if (!planoKey) { box.classList.add('hidden'); return; }
+
+  const valor = PLANOS[planoKey].valores[faixa];
+  if (dep) dep.valor = fmt(valor);
+
+  const clrMap   = { bronze:'#B06A35', prata:'#4A6070', ouro:'#8A6A10' };
+  const nomeMap  = { bronze:'Amil Bronze', prata:'Amil Prata', ouro:'Amil Ouro' };
+
+  box.classList.remove('hidden');
+  const valEl = document.getElementById(`dep-valor-${id}`);
+  valEl.textContent = fmt(valor);
+  valEl.style.color = clrMap[planoKey];
+  document.getElementById(`dep-plano-label-${id}`).textContent = nomeMap[planoKey] + ' · ' + faixa + ' anos';
+}
+
+function removeDependent(id) {
+  state.dependentes = state.dependentes.filter(d => d.id !== id);
+  const el = document.getElementById(`dep-item-${id}`);
+  if (el) el.remove();
+}
+
+// ══════════════════════════════════════════
+// STEP 3 → 4
+// ══════════════════════════════════════════
+function goToStep4() {
+  renderSummary();
+  document.getElementById('step3').classList.add('hidden');
+  document.getElementById('step4').classList.remove('hidden');
+  setStepNav(4);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  sendToSheets();
+}
+
+// ══════════════════════════════════════════
+// RENDER SUMMARY
+// ══════════════════════════════════════════
+function renderSummary() {
+  const pct     = state.cargo.pct;
+  const box     = document.getElementById('summaryBox');
+  const planoKey = (state.planoSelecionado && state.planoSelecionado !== 'nenhum') ? state.planoSelecionado : null;
+  const planoNomes = { bronze:'Amil Bronze', prata:'Amil Prata', ouro:'Amil Ouro' };
+
+  let planLabel      = 'Sem interesse';
+  let valorTitularNum = 0;
+  let planValorStr   = '';
+
+  if (planoKey) {
+    const total       = PLANOS[planoKey].valores[state.faixa];
+    valorTitularNum   = calcColabPrice(total, pct);
+    planLabel         = planoNomes[planoKey];
+    planValorStr      = fmt(valorTitularNum);
+  }
+
+  // Dependentes
+  let depRows    = '';
+  let totalDepsNum = 0;
+
+  if (state.addDeps && state.dependentes.length > 0) {
+    state.dependentes.forEach((d, i) => {
+      const nomeEl  = document.getElementById(`dep-nome-${d.id}`);
+      const nomeVal = (nomeEl && nomeEl.value.trim()) ? nomeEl.value.trim() : `Dependente ${i+1}`;
+      const par     = d.parentesco || '—';
+      const faixaTxt = d.faixa ? d.faixa + ' anos' : '—';
+      const plNome  = planoKey ? planoNomes[planoKey] : '—';
+
+      let depValorNum = 0;
+      if (planoKey && d.faixa) { depValorNum = PLANOS[planoKey].valores[d.faixa]; totalDepsNum += depValorNum; }
+      const depValorStr = depValorNum > 0 ? fmt(depValorNum) : '—';
+
+      depRows += `
+        <div class="summary-row" style="flex-direction:column;align-items:flex-start;gap:4px;padding:12px 0;">
+          <span style="font-family:'Nunito',sans-serif;font-weight:800;color:var(--text-dark);font-size:14px;">👤 ${nomeVal}</span>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:3px;">
+            <span style="font-size:12px;color:var(--text-light);">Parentesco: <strong style="color:var(--text-mid)">${par}</strong></span>
+            <span style="font-size:12px;color:var(--text-light);">Faixa: <strong style="color:var(--text-mid)">${faixaTxt}</strong></span>
+            <span style="font-size:12px;color:var(--text-light);">Produto: <strong style="color:var(--text-mid)">${plNome}</strong></span>
+            <span style="font-size:12px;color:var(--text-light);">Valor: <strong style="color:var(--blue)">${depValorStr}/mês</strong></span>
+          </div>
+        </div>`;
+    });
+  } else {
+    depRows = `<div class="summary-row"><span class="s-label">Dependentes</span><span class="s-value">Nenhum</span></div>`;
+  }
+
+  // Total
+  const totalGeral    = valorTitularNum + totalDepsNum;
+  const totalGeralStr = totalGeral > 0 ? fmt(totalGeral) : '—';
+
+  const totalBlock = planoKey ? `
+    <div style="margin-top:16px;background:linear-gradient(135deg,var(--blue-dark),var(--blue-mid));border-radius:14px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;">💰 Total mensal a pagar</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);">
+          Titular ${planValorStr}${totalDepsNum > 0 ? ` + ${state.dependentes.length} dep. ${fmt(totalDepsNum)}` : ''}
+        </div>
+      </div>
+      <div style="font-family:'Nunito',sans-serif;font-size:28px;font-weight:900;color:#7EC8F5;">${totalGeralStr}<span style="font-size:13px;font-weight:400;color:rgba(255,255,255,0.45)">/mês</span></div>
+    </div>` : '';
+
+  box.innerHTML = `
+    <h4>📋 Sua Simulação</h4>
+    <div class="summary-row">
+      <span class="s-label">Colaborador</span>
+      <span class="s-value">${state.nome}</span>
+    </div>
+    <div class="summary-row">
+      <span class="s-label">Cargo</span>
+      <span class="s-value">${state.cargo.nome}</span>
+    </div>
+    <div class="summary-row">
+      <span class="s-label">Subsídio da empresa</span>
+      <span class="s-value highlight">${pct}%</span>
+    </div>
+    <div class="summary-row">
+      <span class="s-label">Faixa etária</span>
+      <span class="s-value">${state.faixa} anos</span>
+    </div>
+    <div class="summary-row">
+      <span class="s-label">Plano escolhido</span>
+      <span class="s-value">${planLabel}</span>
+    </div>
+    ${planoKey ? `<div class="summary-row"><span class="s-label">Titular pagará</span><span class="s-value highlight">${planValorStr}/mês</span></div>` : ''}
+    ${depRows}
+    ${totalBlock}
+  `;
+}
+
+// ══════════════════════════════════════════
+// SEND TO GOOGLE SHEETS
+// ══════════════════════════════════════════
+async function sendToSheets() {
+  if (!SCRIPT_URL || SCRIPT_URL === 'COLE_AQUI_A_URL_DO_NOVO_APPS_SCRIPT') return;
+
+  document.getElementById('sendingState').classList.add('show');
+  document.getElementById('savedBadge').classList.remove('show');
+  document.getElementById('errorState').classList.remove('show');
+
+  const pct = state.cargo.pct;
+  const planoKey = (state.planoSelecionado && state.planoSelecionado !== 'nenhum') ? state.planoSelecionado : null;
+  const planoNomes = { bronze:'Amil Bronze', prata:'Amil Prata', ouro:'Amil Ouro' };
+  let planLabel = 'Sem interesse', valorColab = '';
+
+  if (planoKey) {
+    const total = PLANOS[planoKey].valores[state.faixa];
+    valorColab  = fmt(calcColabPrice(total, pct));
+    planLabel   = planoNomes[planoKey];
+  }
+
+  const deps = state.dependentes.map((d, i) => {
+    const nomeEl = document.getElementById(`dep-nome-${d.id}`);
+    const nome   = (nomeEl && nomeEl.value.trim()) ? nomeEl.value.trim() : `Dependente ${i+1}`;
+    const plNome = planoKey ? planoNomes[planoKey] : '—';
+    return `${nome} | ${d.parentesco||'—'} | ${plNome} | ${d.faixa||'—'} anos | ${d.valor||'—'}`;
+  }).join(' // ') || 'Nenhum';
+
+  const totalDeps = state.dependentes.reduce((acc, d) =>
+    acc + (planoKey && d.faixa ? PLANOS[planoKey].valores[d.faixa] : 0), 0);
+  const totalGeral = (planoKey ? calcColabPrice(PLANOS[planoKey].valores[state.faixa], pct) : 0) + totalDeps;
+
+  const payload = {
+    nome: state.nome, admissao: state.admissao,
+    cargo: state.cargo.nome, faixa: state.faixa,
+    subsidio: pct, plano: planLabel,
+    valorColaborador: valorColab, dependentes: deps,
+    totalMensal: totalGeral > 0 ? fmt(totalGeral) : '—'
+  };
+
+  try {
+    const form = new FormData();
+    form.append('data', JSON.stringify(payload));
+    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: form });
+    document.getElementById('sendingState').classList.remove('show');
+    document.getElementById('savedBadge').classList.add('show');
+  } catch (err) {
+    document.getElementById('sendingState').classList.remove('show');
+    document.getElementById('errorState').classList.add('show');
+  }
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goBack(to) {
+  document.getElementById('step' + (to + 1)).classList.add('hidden');
+  document.getElementById('step' + to).classList.remove('hidden');
+  setStepNav(to);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  state = { nome:'', admissao:'', cargo:null, faixa:'', planoSelecionado:null, addDeps:null, dependentes:[] };
+  depCount = 0;
+  ['nome','admissao','cargo','faixa'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('dependentsList').innerHTML = '';
+  document.getElementById('depYes').classList.remove('active');
+  document.getElementById('depNo').classList.remove('active');
+  document.getElementById('depSection').classList.add('hidden');
+  document.getElementById('btnStep3Next').disabled = true;
+  document.getElementById('btnStep2Next').disabled = true;
+  document.getElementById('step4').classList.add('hidden');
+  document.getElementById('step1').classList.remove('hidden');
+  setStepNav(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
